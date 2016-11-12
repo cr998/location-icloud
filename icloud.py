@@ -5,27 +5,26 @@ import time
 import collections
 import MySQLdb
 
-DB_HOST = 'DB_HOST' 
-DB_USER = 'DB_USER' 
-DB_PASS = 'DB_PASS' 
-DB_NAME = 'DB_NAME' 
- 
-def run_query(query=''): 
-    datos = [DB_HOST, DB_USER, DB_PASS, DB_NAME] 
- 
-    conn = MySQLdb.connect(*datos) # Conectar a la base de datos 
-    cursor = conn.cursor()         # Crear un cursor 
-    cursor.execute(query)          # Ejecutar una consulta 
- 
-    if query.upper().startswith('SELECT'): 
-        data = cursor.fetchall()   # Traer los resultados de un select 
-    else: 
-        conn.commit()              # Hacer efectiva la escritura de datos 
-        data = None 
- 
-    cursor.close()                 # Cerrar el cursor 
-    conn.close()                   # Cerrar la conexion 
- 
+DB_HOST = 'localhost'
+DB_USER = 'root'
+DB_PASS = 'root'
+DB_NAME = 'icloud'
+
+def run_query(query=''):
+    datos = [DB_HOST, DB_USER, DB_PASS, DB_NAME]
+
+    conn = MySQLdb.connect(*datos) # Conectar a la base de datos
+    cursor = conn.cursor()         # Crear un cursor
+    cursor.execute(query)          # Ejecutar una consulta
+
+    if query.upper().startswith('SELECT'):
+        data = cursor.fetchall()   # Traer los resultados de un select
+    else:
+        conn.commit()              # Hacer efectiva la escritura de datos
+        data = None
+
+    cursor.close()                 # Cerrar el cursor
+    conn.close()                   # Cerrar la conexion
     return data
 
 def convert(data):
@@ -36,24 +35,28 @@ def convert(data):
     elif isinstance(data, collections.Iterable):
         return type(data)(map(convert, data))
     else:
-        return data	
+        return data
 
 def seldevice(api):
-    
+
+
     dispositivos=convert(api.devices)
     if 1==len(list(dispositivos.values())):
+
         return api.devices[0]
+
     else:
-        print("No soporta multiples dispositivos")
-        #print("Elige un dispositivo")
-        #i=0
-        #for valor in convert(api.devices):
-        #    i=i+1
-        #    print "[%s]  -->  %s " % (i,valor)
+        print("Elige un dispositivo")
+        i=0
+        for valor in convert(api.devices):
+            i=i+1
+            print "[%s]  -->  %s " % (i,valor)
+        num=int(raw_input("introduce un numero: "))-1
+        return api.devices[num]
 
 def main(email,password,delay=3):
     api = PyiCloudService(email, password)
-    
+
 
     timeunix=0
     device=seldevice(api)
@@ -66,10 +69,13 @@ def main(email,password,delay=3):
             lat=loc.get("latitude")
             longi=loc.get("longitude")
             prec=loc.get("horizontalAccuracy")
-            	
+
             query = "INSERT INTO loc (time, latitud, longitud, prec, cuenta, dispositivo) VALUES ('%s','%s','%s','%s','%s','%s')"%(str(timeunix),str(lat),str(longi),str(prec),str(email),str(dispositivo))
             print(query)
             run_query(query)
-        time.sleep(delay)
+        time.sleep(delay*60)
 
-main("email","pass","delay gps")
+
+email=""
+password=""
+main(email,password,2)
